@@ -8,10 +8,6 @@
 
 在论文中描述的正文提取基础上，我增加了标题、发布时间和文章作者的自动化探测与提取功能。
 
-最后的输出效果如下图所示：
-
-![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/2019-09-08-22-02-04.png)
-
 目前这个项目是一个非常非常早期的 Demo，发布出来是希望能够尽快得到大家的使用反馈，从而能够更好地有针对性地进行开发。
 
 本项目取名为`抽取器`，而不是`爬虫`，是为了规避不必要的风险，因此，本项目的输入是 HTML，输出是一个字典。请自行使用恰当的方法获取目标网站的 HTML。
@@ -20,25 +16,33 @@
 
 ## 如何使用
 
+### 在线体验
+
+如果你想先体验 GNE 的提取效果，那么你可以访问[http://gne.kingname.info/](http://gne.kingname.info/)。
+一般情况下，你只需要把网页粘贴到最上面的多行文本框中，然后点`提取`按钮即可。通过附加更多的参数，可以让提取更精确。具体
+参数的写法与作用，请参阅 [API](https://generalnewsextractor.readthedocs.io/zh_CN/latest/#api)
+
 ### 使用环境
 
 如果你想体验 GNE 的功能，请按照如下步骤进行：
 
-1. 安装 GNE
+#### 安装 GNE
 
 ```bash
 
 # 以下两种方案任选一种即可
 
 # 使用 pip 安装
-pip install --upgrade git+https://github.com/kingname/GeneralNewsExtractor.git
+pip install --upgrade gne
 
 # 使用 pipenv 安装
-pipenv install git+https://github.com/kingname/GeneralNewsExtractor.git#egg=gne
+pipenv install gne
 
 ```
 
-2. 使用 GNE
+#### 使用 GNE
+
+##### 提取正文
 
 ```python
 >>> from gne import GeneralNewsExtractor
@@ -49,9 +53,21 @@ pipenv install git+https://github.com/kingname/GeneralNewsExtractor.git#egg=gne
 >>> result = extractor.extract(html, noise_node_list=['//div[@class="comment-list"]'])
 >>> print(result)
 
-{"title": "xxxx", "publish_time": "2019-09-10 11:12:13", "author": "yyy", "content": "zzzz"}
+{"title": "xxxx", "publish_time": "2019-09-10 11:12:13", "author": "yyy", "content": "zzzz", "images": ["/xxx.jpg", "/yyy.png"]}
 ```
 
+更多使用说明，请参阅 [GNE 的文档](https://generalnewsextractor.readthedocs.io/)
+
+##### 提取列表页(测试版)
+    
+```python
+>>> from gne import ListPageExtractor
+>>> html = '''经过渲染的网页 HTML 代码'''
+>>> list_extractor = ListPageExtractor()
+>>> result = list_extractor.extract(html,
+                                    feature='列表中任意元素的 XPath")
+>>> print(result)
+```
 
 ### 开发环境
 
@@ -96,9 +112,20 @@ result = extractor.extract(html)
 print(result)
 ```
 
+* 如果标题自动提取失败了，你可以指定 XPath：
+
+```python
+from gne import GeneralNewsExtractor
+
+extractor = GeneralNewsExtractor()
+html = '你的目标网页正文'
+result = extractor.extract(html, title_xpath='//h5/text()')
+print(result)
+```
+
 对大多数新闻页面而言，以上的写法就能够解决问题了。
 
-但某些新闻网页下面会有评论，评论里面可能存在长篇大论，它们会看起来比真正的新闻正文更像是正文，因此`extractor.extract()`方法还有一个默认参数`noise_mode_list`，用于在网页预处理时提前把评论区域整个移除。
+但某些新闻网页下面会有评论，评论里面可能存在长篇大论，它们会看起来比真正的新闻正文更像是正文，因此`extractor.extract()`方法还有一个默认参数`noise_node_list`，用于在网页预处理时提前把评论区域整个移除。
 
 `noise_mode_list`的值是一个列表，列表里面的每一个元素都是 XPath，对应了你需要提前移除的，可能会导致干扰的目标标签。
 
@@ -108,29 +135,36 @@ print(result)
 result = extractor.extract(html, noise_node_list=['//div[@class="comment-list"]'])
 ```
 
-`test`文件夹中的网页的提取结果，请查看`result.txt`。
+* **提取新闻列表页的功能是测试功能，请勿用于生产环境**。你可以通过Chrome 浏览器开发者工具中的 `Copy XPath` 来复制列表中任意一项的XPath，如下图所示。
+
+![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/2020-08-02-17-07-19.png)
+
+GNE 会根据这一项的 XPath，自动找到这个列表里面其他行的数据。
+
+
 
 ## 运行截图
 
-### 凤凰网
-
-![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20190909-232516.png)
-
 ### 网易新闻
 
-![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20190909-233122.png)
+![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20191125-231230.png)
 
 ### 今日头条
 
-![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20190909-233313.png)
+![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20191125-225851.png)
 
 ### 新浪新闻
 
-![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20190909-233702.png)
+![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20191125-231506.png)
 
-### 观察者网
+### 凤凰网
 
-![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20190909-234102.png)
+![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20191126-004218.png)
+
+### 网易新闻首页列表
+
+![](https://github.com/kingname/GeneralNewsExtractor/blob/master/screenshots/WX20200802-170137@2x.png)
+
 
 
 ## 项目文档
@@ -142,14 +176,15 @@ result = extractor.extract(html, noise_node_list=['//div[@class="comment-list"]'
 1. 目前本项目只适用于新闻页的信息提取。如果目标网站不是新闻页，或者是今日头条中的相册型文章，那么抽取结果可能不符合预期。
 2. 可能会有一些新闻页面出现抽取结果中的作者为空字符串的情况，这可能是由于文章本身没有作者，或者使用了已有正则表达式没有覆盖到的情况。
 
+
 ## Todo
 
 * ~~使用一个配置文件来存放常量数据，而不是直接 Hard Code 写在代码中。~~
-* 允许自定义时间、作者的提取Pattern
-* 新闻文章列表页提取
+* ~~允许自定义时间、作者的提取Pattern~~
+* ~~新闻文章列表页提取~~
 * 对于多页的新闻，允许传入一个 HTML 列表，GNE 解析以后，自动拼接为完整的新闻正文
-* 优化内容提取速度
-* 测试更多新闻网站
+* ~~优化内容提取速度~~
+* ~~测试更多新闻网站~~
 * ……
 
 ## 交流沟通
@@ -160,9 +195,13 @@ result = extractor.extract(html, noise_node_list=['//div[@class="comment-list"]'
 
 验证消息：`GNE`
 
+如果你不用微信，那么可以加入 Telegram 群：[https://t.me/joinchat/Bc5swww_XnVR7pEtDUl1vw](https://t.me/joinchat/Bc5swww_XnVR7pEtDUl1vw)
+
 
 ## 论文修订
 
 在使用 Python 实现这个抽取器的过程中，我发现论文里面的公式和方法存在一些纰漏，会导致部分节点报错。我将会单独写几篇文章来介绍这里的修改。请关注我的微信公众号：未闻Code：
 
 ![](https://kingname-1257411235.cos.ap-chengdu.myqcloud.com/wechatplatform.jpg)
+
+
